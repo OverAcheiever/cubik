@@ -1,30 +1,40 @@
 import { Input, InputGroup, InputRightAddon } from '@chakra-ui/react';
 import FlipNumbers from 'react-flip-numbers';
-import { Control, FieldErrors, UseFormRegister } from 'react-hook-form';
+import {
+  Control,
+  FieldErrors,
+  UseFormRegister,
+  UseFormWatch,
+} from 'react-hook-form';
 import { ControlledSelect } from '~/components/common/select/ControlledSelect';
+import useCurrentTokenPrice from '~/hooks/useCurrentTokenPrice';
 import { DonationFormType } from '~/interfaces/donationForm';
 import { tokenGroup } from '~/interfaces/token';
-import useCurrentTokenPrice from '~/hooks/useCurrentTokenPrice';
 
 type AmountInputProps = {
   donation: number;
-  setDonation: (value: number) => void;
   register: UseFormRegister<DonationFormType>;
   errors: FieldErrors<DonationFormType>;
   token: tokenGroup[];
   control: Control<DonationFormType, any>;
+  watch: UseFormWatch<DonationFormType>;
 };
 
 export const AmountInput = ({
   donation,
-  setDonation,
   register,
-  errors,
   token,
+  watch,
   control,
 }: AmountInputProps) => {
   const { data: price, isLoading, error } = useCurrentTokenPrice('solana');
-
+  const handledonation = () => {
+    if (watch('token').label.toLocaleLowerCase().includes('sol')) {
+      return !isNaN(donation) ? String((donation * price!).toFixed(2)) : '0';
+    } else {
+      return !isNaN(donation) ? donation.toFixed() : '0';
+    }
+  };
   return (
     <>
       <InputGroup border="1px solid #141414" rounded={'8px'}>
@@ -176,7 +186,7 @@ export const AmountInput = ({
               //background="black"
               play
               perspective={700}
-              numbers={String((donation * price).toFixed(2))}
+              numbers={handledonation()}
             />
           </InputRightAddon>
         ) : (

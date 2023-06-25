@@ -395,7 +395,7 @@ export const contributeSPL = async (
   const ata_reciver = await spl.getAssociatedTokenAddress(
     tokenMint,
     projectInfo.multiSig,
-    false,
+    true,
     spl.TOKEN_PROGRAM_ID,
     spl.ASSOCIATED_TOKEN_PROGRAM_ID
   );

@@ -81,17 +81,6 @@ export const ProjectDonationSimulator = ({
   const { publicKey } = useWallet();
   const selectedToken: tokenGroup = watch('token');
 
-  const setDonationAndAmount = (donation: number) => {
-    if (selectedToken.label === 'sol') {
-      setValue('amount', donation * 22);
-    } else if (selectedToken.label === 'usdc') {
-      setValue('amount', donation);
-    } else if (selectedToken.label === 'bonk') {
-      setValue('amount', donation * 0.00000005);
-    } else {
-      setValue('amount', 0);
-    }
-  };
   // In component:
   const utils = trpc.useContext();
   const updateProjectRaise = trpc.contribution.updateProjectRaise.useMutation();
@@ -120,25 +109,39 @@ export const ProjectDonationSimulator = ({
   async function onSubmit(_values: any) {
     if (!priceSol.data) return;
     let sig: string | null = null;
+
     const balance = await getBalances(publicKey?.toBase58() as string);
 
-    console.log('balance --------- ', balance);
-    if (balance.nativeBalance < _values.amount * LAMPORTS_PER_SOL) {
-      return setTxnError('Insufficient balance');
-    }
     if (String(_values.token.value).includes('sol')) {
+      if (balance.nativeBalance < _values.amount * LAMPORTS_PER_SOL) {
+        return setTxnError('Insufficient balance');
+      }
+      if (((_values.amount * priceSol.data) as number) > 2500) {
+        setTxnError('Cannot Donate amount above $2500');
+        return;
+      }
       sig = await donateSOL(
         roundName as string,
         projectDetails?.owner_publickey,
         projectDetails?.projectUserCount,
         _values.matchingPoolDonation,
         _values.amount,
-        _values.amount * priceSol.data // multiply by 100 because of 2 decimal places
+        _values.amount * priceSol.data
       );
     } else {
+      if (
+        balance.tokens.find((e: any) => e.mint === _values.token.mainNetAdd)
+          .amount < _values.amount
+      ) {
+        return setTxnError('Insufficient balance');
+      }
+      if ((_values.amount as number) > 2500) {
+        setTxnError('Cannot Donate amount above $2500');
+        return;
+      }
       sig = await donateSPL(
         roundName as string,
-        '',
+        _values.token.mainNetAdd,
         projectDetails?.owner_publickey,
         projectDetails?.projectUserCount,
         _values.matchingPoolDonation,
@@ -180,7 +183,7 @@ export const ProjectDonationSimulator = ({
         owner,
         count, // project count
         split, // split
-        total, // total
+        total * 1000000, // total
         usd // usd value
       );
       const tx = new anchor.web3.Transaction();
@@ -193,6 +196,7 @@ export const ProjectDonationSimulator = ({
 
       return txid;
     } catch (error: any) {
+      console.log(error);
       setTxnError(error.message || 'There was some error');
       return null;
     }
@@ -235,8 +239,15 @@ export const ProjectDonationSimulator = ({
       return null;
     }
   };
+  const handleDonationEstimate = () => {
+    if (watch('token').label.toLocaleLowerCase().includes('sol')) {
+      return (watch('amount') * priceSol.data!) as number;
+    } else {
+      return watch('amount');
+    }
+  };
   const EstimatedAmmount = trpc.pool.findEstimated.useQuery({
-    amount: (watch('amount') * priceSol.data!) as number,
+    amount: handleDonationEstimate(),
     projectId: projectDetails.id,
     roundId: roundId,
   });
@@ -275,11 +286,11 @@ export const ProjectDonationSimulator = ({
             <HStack>
               <AmountInput
                 donation={donation}
-                setDonation={setDonationAndAmount}
                 register={register}
                 errors={errors}
                 token={tokens}
                 control={control}
+                watch={watch}
               />
             </HStack>
             <FormErrorMessage textStyle={{ base: 'body5', md: 'body4' }}>
