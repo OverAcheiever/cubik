@@ -378,6 +378,7 @@ export const contributeSPL = async (
   //@ts-ignore
   const adminInfo = await program.account.admin.fetch(adminAccount);
 
+  //@ts-ignore
   const ata_sender = await spl.getAssociatedTokenAddress(
     tokenMint,
     wallet.publicKey,
