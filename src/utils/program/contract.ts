@@ -416,12 +416,14 @@ export const contributeSPL = async (
   let tokenAccountIx;
   let tokenAccountIx1;
   if (!info) {
+    //@ts-ignore
     tokenAccountIx = spl.createAssociatedTokenAccountInstruction(
       wallet.publicKey,
       ata_reciver,
       projectInfo.multiSig,
       tokenMint
     );
+    //@ts-ignore
     tokenAccountIx1 = spl.createAssociatedTokenAccountInstruction(
       wallet.publicKey,
       ata_admin,
