@@ -386,6 +386,7 @@ export const contributeSPL = async (
     spl.TOKEN_PROGRAM_ID,
     spl.ASSOCIATED_TOKEN_PROGRAM_ID
   );
+  //@ts-ignore
   const ata_admin = await spl.getAssociatedTokenAddress(
     tokenMint,
     adminInfo.authority,
@@ -393,6 +394,7 @@ export const contributeSPL = async (
     spl.TOKEN_PROGRAM_ID,
     spl.ASSOCIATED_TOKEN_PROGRAM_ID
   );
+  //@ts-ignore
   const ata_reciver = await spl.getAssociatedTokenAddress(
     tokenMint,
     projectInfo.multiSig,
