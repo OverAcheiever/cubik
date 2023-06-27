@@ -24,9 +24,10 @@
     "@emotion/styled": "^11.10.6",
     "@fontsource/plus-jakarta-sans": "^4.5.11",
     "@hookform/resolvers": "^2.9.11",
+    "@jup-ag/core": "^4.0.0-beta.20",
     "@lottiefiles/react-lottie-player": "^3.5.3",
     "@metaplex-foundation/js": "^0.18.3",
-    "@prisma/client": "^4.11.0",
+    "@prisma/client": "^4.16.1",
     "@solana/pay": "^0.2.5",
     "@solana/spl-token": "^0.3.7",
     "@solana/wallet-adapter-base": "^0.9.18",
@@ -74,7 +75,6 @@
     "moment": "^2.29.4",
     "next": "13.2.4",
     "nprogress": "^0.2.0",
-    "prisma": "^4.11.0",
     "qrcode.react": "^3.1.0",
     "react": "18.2.0",
     "react-apexcharts": "^1.4.0",
@@ -112,6 +112,7 @@
     "eslint": "8.36.0",
     "eslint-config-next": "13.2.4",
     "husky": "^8.0.3",
+    "prisma": "^4.16.1",
     "simple-zustand-devtools": "^1.1.0",
     "typescript": "4.9.5"
   }

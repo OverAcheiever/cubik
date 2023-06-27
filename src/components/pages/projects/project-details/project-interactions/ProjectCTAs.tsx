@@ -91,7 +91,9 @@ export const ProjectCTAs = ({
       setVisible(true);
     }
   };
-
+  // useEffect(() => {
+  //   onOpen();
+  // }, []); only for testing payment modal
   const DonationStatus = () => {
     if (joinId && round) {
       // if round is going on show donation button

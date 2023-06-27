@@ -25,8 +25,9 @@ import { DonationFormType } from '~/interfaces/donationForm';
 import { tokenGroup } from '~/interfaces/token';
 import { useUserStore } from '~/store/userStore';
 
+import { Jupiter, TOKEN_LIST_URL } from '@jup-ag/core';
 import { ProjectsModel } from '@prisma/client';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Cluster, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import axios from 'axios';
 import useCurrentTokenPrice from '~/hooks/useCurrentTokenPrice';
 import {
@@ -47,6 +48,16 @@ type ProjectDonationSimulatorProps = {
   roundName: string;
 };
 
+interface Token {
+  chainId: number;
+  address: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+  logoURI: string;
+  tags: string[];
+}
+
 export const token: tokenGroup[] = tokens;
 
 export const ProjectDonationSimulator = ({
@@ -59,6 +70,7 @@ export const ProjectDonationSimulator = ({
   roundName,
 }: ProjectDonationSimulatorProps) => {
   const [txnError, setTxnError] = useState<string | null>(null);
+
   const toast = useToast();
   const priceSol = useCurrentTokenPrice('solana');
   const {
@@ -142,15 +154,54 @@ export const ProjectDonationSimulator = ({
         setTxnError('Cannot Donate amount above $2500');
         return;
       }
-      sig = await donateSPL(
-        roundName as string,
-        _values.token.mainNetAdd,
-        projectDetails?.owner_publickey,
-        projectDetails?.projectUserCount,
-        _values.matchingPoolDonation,
-        _values.amount, // token value direct because form is not taking near 0 values
-        _values.amount * priceSol.data // multiply by 100 because of 2 decimal places
-      );
+      if (_values.token.mainNetAdd.includes('usdc')) {
+        sig = await donateSPL(
+          roundName as string,
+          _values.token.mainNetAdd,
+          projectDetails?.owner_publickey,
+          projectDetails?.projectUserCount,
+          _values.matchingPoolDonation,
+          _values.amount, // token value direct because form is not taking near 0 values
+          _values.amount * priceSol.data // multiply by 100 because of 2 decimal places
+        );
+      } else {
+        if (!user?.mainWallet) throw new Error('Missing user main wallet');
+        const ENV = process.env.NEXT_PUBLIC_SOLANA_NETWORK;
+        if (!ENV)
+          throw new Error('Missing env variable NEXT_PUBLIC_SOLANA_NETWORK');
+        const tokens: Token[] = await (
+          await fetch(TOKEN_LIST_URL[ENV as Cluster])
+        ).json();
+
+        const jupiter = await Jupiter.load({
+          connection,
+          cluster: ENV as Cluster,
+          user: new PublicKey(user?.mainWallet),
+        });
+        const routeMap = jupiter.getRouteMap();
+        const routes = await jupiter.computeRoutes({
+          inputMint: new PublicKey(_values.token.mainNetAdd),
+          outputMint: new PublicKey(_values.token.mainNetAdd),
+          amount: _values.amount,
+          slippageBps: 100,
+          forceFetch: false,
+        });
+        let routeInfo = routes.routesInfos[0];
+        const { execute } = await jupiter.exchange({
+          routeInfo,
+        });
+
+        const swapResult = await execute();
+        console.log(routeInfo, swapResult, 'swapResult');
+        sig = await donateSOL(
+          roundName as string,
+          projectDetails?.owner_publickey,
+          projectDetails?.projectUserCount,
+          _values.matchingPoolDonation,
+          _values.amount,
+          Number(routeInfo.outAmount) * priceSol.data
+        );
+      }
     }
 
     if (!sig) return;
