@@ -37,7 +37,7 @@ Cubik is built on the Solana blockchain, which allows for fast, secure, and low-
 
 **Decentralized Grant Allocation**: The platform conducts decentralized grant rounds, which allows the community to collectively decide on resource allocation, encouraging collective decision-making.
 
-### Built With
+### Built with
 
 - [Next.js](https://nextjs.org/?ref=cal.com)
 - [tRPC](https://trpc.io/?ref=cal.com)
