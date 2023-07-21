@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { publicProcedure } from '../../../trpc';
-import type { verifiedProjectsType } from '../../../types';
+import { z } from "zod";
+import { publicProcedure } from "../../../trpc";
+import type { verifiedProjectsType } from "../../../types";
 
 export const verifiedProjects = publicProcedure
   .input(
@@ -21,72 +21,75 @@ export const verifiedProjects = publicProcedure
       return seed / m;
     }
 
-    function shuffleArray(array: any[], seed: number) {
-      var count = array.length,
-        randomNumber,
-        temp;
-      while (count) {
-        randomNumber = Math.floor(seededRandom(seed) * count);
-        count--;
-        temp = array[count];
-        array[count] = array[randomNumber];
-        array[randomNumber] = temp;
-        seed++;
+    function shuffleArray<T>(array: T[], seed: number): T[] {
+      // Create a copy of the original array to avoid modifying the input array
+      const shuffledArray = [...array];
+
+      // Fisher-Yates shuffle algorithm using the seededRandom function
+      for (let i = shuffledArray.length - 1; i > 0; i--) {
+        // Get a random index based on the seed
+        const randomIndex = Math.floor(seededRandom(seed) * (i + 1));
+
+        // Swap elements to shuffle the array
+        const temp = shuffledArray[i];
+        shuffledArray[i] = shuffledArray[randomIndex];
+        shuffledArray[randomIndex] = temp;
       }
 
-      return array;
+      return shuffledArray;
     }
 
-
-  
-  const result = await prisma.projectJoinRound.findMany({
-        where: {
-          status: 'APPROVED',
-        },
-        select: {
-          id: true,
-          status: true,
-          amountRaise: true,
-          fundingRound: {
-            select: {
-              id: true,
-              colorScheme: true,
-              active: true,
-              endTime: true,
-              roundName: true,
-              startTime: true,
-            },
+    const result = await prisma.projectJoinRound.findMany({
+      where: {
+        status: "APPROVED",
+      },
+      select: {
+        id: true,
+        status: true,
+        amountRaise: true,
+        fundingRound: {
+          select: {
+            id: true,
+            colorScheme: true,
+            active: true,
+            endTime: true,
+            roundName: true,
+            startTime: true,
           },
-          project: {
-            select: {
-              id: true,
-              industry: true,
-              logo: true,
-              name: true,
-              project_link: true,
-              short_description: true,
-              owner: {
-                select: {
-                  username: true,
-                },
+        },
+        project: {
+          select: {
+            id: true,
+            industry: true,
+            logo: true,
+            name: true,
+            project_link: true,
+            short_description: true,
+            owner: {
+              select: {
+                username: true,
               },
-              isArchive: true,
-              Contribution: input.mobile ? false : {
-                select: {
-                  id: true,
-                  user: {
-                    select: {
-                      profilePicture: true,
-                      username: true,
+            },
+            isArchive: true,
+            Contribution: input.mobile
+              ? false
+              : {
+                  distinct: ["userId"],
+                  select: {
+                    id: true,
+                    user: {
+                      select: {
+                        profilePicture: true,
+                        username: true,
+                      },
                     },
                   },
+                  take: 3,
                 },
-              },
-            },
           },
         },
-      });
-
+      },
+    });
 
     const res = shuffleArray(result, (input.seed as number) ?? 0).filter(
       (e) => e.project.isArchive === false

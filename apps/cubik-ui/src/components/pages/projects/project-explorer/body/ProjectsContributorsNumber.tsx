@@ -8,6 +8,7 @@ export type ContributionType = {
     profilePicture: string;
     username: string;
   };
+  count: string;
 };
 
 const ProjectsContributorsNumber = ({
@@ -24,6 +25,7 @@ const ProjectsContributorsNumber = ({
         profilePicture: string;
         username: string;
       };
+      count: string;
     }[]
   >([]);
 
@@ -45,6 +47,8 @@ const ProjectsContributorsNumber = ({
 
     setContributors(contributorsData);
   }, [contributorsList]);
+
+  console.log('count', contributors);
 
   return (
     <>
